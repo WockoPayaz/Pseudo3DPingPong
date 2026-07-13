@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Table Tennis</title>
+<title>Table Tennis Championship</title>
 <style>
   :root{
     --cream:#f2ede2;
     --bronze:#c9a15a;
     --steel:#3f6fae;
     --brick:#c0392b;
-    --ink:#0d1b2a;
+    --ink:#080e14;
   }
   html,body{
     margin:0; padding:0; width:100%; height:100%;
-    background:var(--ink);
+    background:#000;
     overflow:hidden;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     touch-action:none;
@@ -24,152 +24,179 @@
     cursor:none;
     width:100vw;
     height:100vh;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
   }
 
-  /* ---------- Scoreboard ---------- */
+  /* ---------- Retro Floating Scoreboard ---------- */
   #scoreboard{
     position:fixed;
-    top:18px; left:50%;
+    top:25px; left:50%;
     transform:translateX(-50%);
     display:flex;
     align-items:center;
-    gap:0;
-    background:linear-gradient(180deg,#152738,#0c1826);
-    border:1px solid rgba(201,161,90,0.35);
-    border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
-    padding:10px 0;
+    background:#000000;
+    border:4px solid #ffffff;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.4);
+    padding:6px 20px;
     z-index:10;
     user-select:none;
   }
   .score-side{
     display:flex;
-    flex-direction:column;
     align-items:center;
-    padding:0 26px;
-    min-width:90px;
+    gap:10px;
   }
   .score-label{
-    font-size:11px;
-    letter-spacing:3px;
-    font-weight:600;
+    font-family: 'Courier New', Courier, monospace;
+    font-size:24px;
+    font-weight:900;
     text-transform:uppercase;
-    opacity:0.75;
+    color:#ffffff;
   }
-  #playerLabel{ color:var(--brick); }
-  #aiLabel{ color:var(--steel); }
   .score-value{
     font-family:'Courier New', Courier, monospace;
-    font-size:40px;
-    font-weight:700;
-    line-height:1;
-    margin-top:4px;
-    color:var(--cream);
-    text-shadow:0 0 12px rgba(242,237,226,0.25);
-    font-variant-numeric:tabular-nums;
-  }
-  .score-divider{
-    width:1px;
-    align-self:stretch;
-    background:rgba(201,161,90,0.35);
-    margin:2px 0;
-  }
-  #matchLabel{
-    position:absolute;
-    bottom:-19px;
-    left:50%;
-    transform:translateX(-50%);
-    font-size:9px;
-    letter-spacing:2px;
-    color:var(--bronze);
-    text-transform:uppercase;
-    white-space:nowrap;
-    opacity:0.8;
-  }
-
-  /* ---------- Hint ---------- */
-  #hint{
-    position:fixed;
-    bottom:22px; left:50%;
-    transform:translateX(-50%);
-    color:rgba(242,237,226,0.8);
-    font-size:13px;
-    letter-spacing:0.5px;
-    background:rgba(13,27,42,0.55);
-    padding:8px 16px;
-    border-radius:20px;
-    border:1px solid rgba(201,161,90,0.25);
-    transition:opacity 1s ease;
-    z-index:10;
-    pointer-events:none;
+    font-size:32px;
+    font-weight:bold;
+    color:#ffffff;
+    min-width:40px;
     text-align:center;
   }
-  #hint.fade{ opacity:0; }
+  .score-divider{
+    font-family: 'Courier New', Courier, monospace;
+    font-size:24px;
+    color:#ffffff;
+    margin:0 15px;
+    font-weight:900;
+  }
 
-  /* ---------- Game over overlay ---------- */
+  /* ---------- Controls & Overlay ---------- */
+  #controlPanel{
+    position:fixed;
+    top:18px; left:18px;
+    display:flex;
+    gap:12px;
+    z-index:15;
+  }
+  #controlPanel button{
+    background:#000;
+    color:#fff;
+    border:2px solid #fff;
+    width: 44px;
+    height: 44px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    cursor:pointer;
+  }
+
+  #menuModal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:30;
+  }
+  #menuModal.show{ display:flex; }
+  #menuContent{
+    background:#4a2306;
+    border:4px solid #fca103;
+    padding: 30px 40px;
+    text-align:center;
+    max-width: 260px;
+  }
+  #menuContent h3{
+    color:#fca103;
+    margin-top:0;
+    margin-bottom:18px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  .difficulty-group{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .diff-option{
+    background: #000;
+    color:#fff;
+    border:2px solid #fff;
+    padding:10px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .diff-option.active{
+    background: #fca103;
+    color:#000;
+    border-color:#fff;
+  }
+  #closeMenuBtn{
+    background:#fff;
+    color:#000;
+    border:2px solid #000;
+    padding:8px 20px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top: 10px;
+  }
+
   #overlay{
     position:fixed;
     inset:0;
-    background:rgba(6,12,20,0.82);
+    background:rgba(0,0,0,0.9);
     display:none;
     align-items:center;
     justify-content:center;
     flex-direction:column;
     z-index:20;
-    backdrop-filter: blur(2px);
   }
   #overlay.show{ display:flex; }
-  #overlayTitle{
-    color:var(--bronze);
-    font-size:14px;
-    letter-spacing:4px;
-    text-transform:uppercase;
-    margin-bottom:8px;
-  }
-  #overlayWinner{
-    color:var(--cream);
-    font-size:44px;
-    font-weight:700;
-    margin-bottom:28px;
-    text-shadow:0 0 20px rgba(201,161,90,0.4);
-  }
-  #restartBtn{
-    background:var(--bronze);
-    color:var(--ink);
-    border:none;
-    padding:12px 30px;
-    font-size:15px;
-    font-weight:700;
-    letter-spacing:1px;
-    text-transform:uppercase;
-    border-radius:6px;
-    cursor:pointer;
-    box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  }
-  #restartBtn:hover{ background:#dcb56e; }
+  #overlayTitle{ color:#fff; font-family:'Courier New', monospace; font-size:20px; margin-bottom:8px; }
+  #overlayWinner{ color:#fca103; font-family:'Courier New', monospace; font-size:44px; font-weight:700; margin-bottom:28px; }
+  #restartBtn{ background:#fff; color:#000; border:4px solid #000; padding:12px 30px; font-size:15px; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<div id="scoreboard">
-  <div class="score-side">
-    <div class="score-label" id="playerLabel">You</div>
-    <div class="score-value" id="scorePlayer">0</div>
-  </div>
-  <div class="score-divider"></div>
-  <div class="score-side">
-    <div class="score-label" id="aiLabel">CPU</div>
-    <div class="score-value" id="scoreAI">0</div>
-  </div>
-  <div id="matchLabel">First to 11</div>
+<div id="controlPanel">
+  <button id="menuBtn" title="Open Menu">☰</button>
+  <button id="pauseBtn" title="Toggle Pause State">⏸️</button>
 </div>
 
-<div id="hint">Move your mouse to aim (left/right) and reach (up/down). Overlap the ball to return it.</div>
+<div id="menuModal">
+  <div id="menuContent">
+    <h3>DIFFICULTY</h3>
+    <div class="difficulty-group">
+      <button class="diff-option active" data-diff="easy">EASY</button>
+      <button class="diff-option" data-diff="medium">MEDIUM</button>
+      <button class="diff-option" data-diff="hard">HARD</button>
+    </div>
+    <hr style="border:0; border-top:2px solid #fff; margin:20px 0;">
+    <button id="closeMenuBtn">RESUME</button>
+  </div>
+</div>
+
+<div id="scoreboard">
+  <div class="score-side">
+    <div class="score-label" id="playerLabel">YOU</div>
+    <div class="score-value" id="scorePlayer">00</div>
+  </div>
+  <div class="score-divider"> </div>
+  <div class="score-side">
+    <div class="score-label" id="aiLabel">COM</div>
+    <div class="score-value" id="scoreAI">00</div>
+  </div>
+</div>
 
 <div id="overlay">
-  <div id="overlayTitle">Match Over</div>
-  <div id="overlayWinner">You Win!</div>
-  <button id="restartBtn">Play Again</button>
+  <div id="overlayTitle">MATCH OVER</div>
+  <div id="overlayWinner">YOU WIN!</div>
+  <button id="restartBtn">PLAY AGAIN</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -178,100 +205,181 @@
 (function(){
   "use strict";
 
+  function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+  function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+
+  // Offscreen Canvas for Pre-rendering Background Graphics
+  const bgCanvas = document.createElement('canvas');
+  const bgCtx = bgCanvas.getContext('2d');
 
   const scorePlayerEl = document.getElementById('scorePlayer');
   const scoreAIEl = document.getElementById('scoreAI');
   const overlayEl = document.getElementById('overlay');
   const overlayWinnerEl = document.getElementById('overlayWinner');
   const restartBtn = document.getElementById('restartBtn');
-  const hintEl = document.getElementById('hint');
+
+  const menuBtn = document.getElementById('menuBtn');
+  const pauseBtn = document.getElementById('pauseBtn'); 
+  const menuModal = document.getElementById('menuModal');
+  const closeMenuBtn = document.getElementById('closeMenuBtn');
+  const diffOptions = document.querySelectorAll('.diff-option');
+
+  const DIFFICULTY_SETTINGS = {
+    easy: { aiErrorRange: 0.52, aiSpeed: 0.028, speedUp: 1.02 },
+    medium: { aiErrorRange: 0.38, aiSpeed: 0.04, speedUp: 1.05 },
+    hard: { aiErrorRange: 0.18, aiSpeed: 0.065, speedUp: 1.1 }
+  };
+  let currentDifficulty = 'easy';
+
+  let screenShakeTime = 0;
+  let screenShakeIntensity = 0;
+  let paused = false;
+
+// 1. Setup Audio Objects
+  const bounceSound = new Audio('bounce.mp3');
+  const hitSound = new Audio('hit.mp3');
+  const scoreSound = new Audio('score.mp3');
+
+  // 2. Add an unlock listener
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    // Play empty sounds to unlock
+    bounceSound.play().catch(()=>{});
+    hitSound.play().catch(()=>{});
+    scoreSound.play().catch(()=>{});
+    audioUnlocked = true;
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+  }
+  window.addEventListener('click', unlockAudio);
+  window.addEventListener('touchstart', unlockAudio);
+
+  // 3. Updated playSound function
+  function playSound(type) {
+    let sound;
+    if (type === 'bounce.mp3') sound = bounceSound;
+    else if (type === 'hit.mp3') sound = hitSound;
+    else if (type === 'score.mp3') sound = scoreSound;
+
+    if (sound) {
+      sound.currentTime = 0;
+      sound.play().catch(e => console.log("Audio locked, click screen to unlock"));
+    }
+  }
+
+  diffOptions.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      diffOptions.forEach(opt => opt.classList.remove('active'));
+      e.target.classList.add('active');
+      currentDifficulty = e.target.getAttribute('data-diff');
+      resetBall();
+    });
+  });
 
   // ---------------------------------------------------------------
-  // Perspective / table geometry
+  // Perspective & Grid Geometry
   // ---------------------------------------------------------------
   let W, H, NEAR_Y, FAR_Y, NEAR_WIDTH, FAR_WIDTH, CENTER_X;
-  const FAR_SCALE = 0.28;
+  const FAR_SCALE = 0.42;
 
   function tableWidthAtZ(z){ return NEAR_WIDTH + (FAR_WIDTH - NEAR_WIDTH) * z; }
   function tableYAtZ(z){ return NEAR_Y + (FAR_Y - NEAR_Y) * z; }
-  function scaleAtZ(z){ return 1 - z * (1 - FAR_SCALE); }
+  function scaleAtZ(z){ return Math.max(0.05, 1 - z * (1 - FAR_SCALE)); }
   function xToScreen(x, z){ return CENTER_X + x * (tableWidthAtZ(z) / 2); }
-  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-  function lerp(a, b, t){ return a + (b - a) * t; }
+  function ballXToCanvas(x){ return xToScreen(x, ball.z); }
 
   function resize(){
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
-    NEAR_Y = H * 0.90;
-    FAR_Y = H * 0.20;
+    
+    FAR_Y = H * 0.48;         
+    NEAR_Y = H * 0.88;        
+    
     CENTER_X = W / 2;
-    NEAR_WIDTH = Math.min(W * 0.68, 800);
-    FAR_WIDTH = NEAR_WIDTH * 0.24;
+    NEAR_WIDTH = Math.min(W * 0.52, 600);
+    FAR_WIDTH = NEAR_WIDTH * FAR_SCALE;
+
+    preRenderBackground();
   }
-  resize();
-  window.addEventListener('resize', resize);
 
   // ---------------------------------------------------------------
-  // Input
+  // Game Objects
   // ---------------------------------------------------------------
-  let mouseX = 0, mouseY = 0;
-  function setPointer(clientX, clientY){
-    const rect = canvas.getBoundingClientRect();
-    mouseX = clientX - rect.left;
-    mouseY = clientY - rect.top;
+  const player = { x: 0, z: 0.05, hitPulse: 0 };
+  const ai = { x: 0, z: 0.94, hitPulse: 0, errorX: 0, errorZ: 0, targetX: 0, targetZ: 0.94 };
+  const ball = { x: 0, z: 0.5, h: 1.1, vx: 0, vy: 0, vz: 0, squash: 0, trail: [] };
+
+  let scorePlayer = 0, scoreAI = 0, bounceCount = 0;
+  let playerSideBounce = false;
+  let lastBounceSide = null; // Track side of the last valid bounce ('player' or 'ai')
+  let effects = [];
+  let particles = [];
+
+  function spawnHitParticles(x, z, color, count = 8) {
+    const sx = xToScreen(x, z);
+    const sy = tableYAtZ(z) - (ball.h * 160 * scaleAtZ(z));
+    for(let i=0; i<count; i++){
+      particles.push({
+        x: sx, y: sy,
+        vx: (Math.random() - 0.5) * 120,
+        vy: (Math.random() - 0.7) * 120,
+        alpha: 1,
+        color: '#ffffff', 
+        size: Math.random() * 4 + 2
+      });
+    }
   }
-  mouseX = W/2; mouseY = NEAR_Y;
 
-  window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
-  window.addEventListener('touchmove', e => {
-    if(e.touches && e.touches[0]){ setPointer(e.touches[0].clientX, e.touches[0].clientY); }
-    e.preventDefault();
-  }, { passive:false });
-  window.addEventListener('touchstart', e => {
-    if(e.touches && e.touches[0]){ setPointer(e.touches[0].clientX, e.touches[0].clientY); }
-  }, { passive:false });
-
-  // ---------------------------------------------------------------
-  // Game entities
-  // ---------------------------------------------------------------
-  const player = { x:0, z:0.05, hitPulse:0 };
-  const ai     = { x:0, z:0.96, hitPulse:0, error:0 };
-  const ball   = { x:0, z:0.5, vx:0, vz:0.42, h:1, vy:0, squash:0 };
-
-  let scorePlayer = 0, scoreAI = 0;
-  const WIN_SCORE = 11;
-  let paused = false;
-
-  const effects = []; // bounce / hit ring effects
-
-  function spawnEffect(x, z, color){
-    effects.push({ x, z, t:0, duration:0.45, color });
+  function spawnEffect(x, z, color) {
+    effects.push({ x: x, z: z, color: color, t: 0, duration: 0.2 });
   }
 
   function resetBall(){
+    const isPlayerServer = (scorePlayer + scoreAI) % 4 < 2;
     ball.x = 0;
-    ball.z = 0.5;
-    ball.h = 1.1;
+    ball.z = isPlayerServer ? 0.16 : 0.84;
+    ball.vx = (Math.random() - 0.5) * 0.15;
+    ball.vz = isPlayerServer ? 0.44 : -0.44;
+    ball.h = 1.3;
     ball.vy = 0;
     ball.squash = 0;
-    ball.vz = (Math.random() < 0.5 ? 1 : -1) * 0.42;
-    ball.vx = (Math.random() - 0.5) * 0.15;
-    ai.error = (Math.random() - 0.5) * 0.28;
+    ball.trail = [];
+    bounceCount = 0;
+    playerSideBounce = false;
+    lastBounceSide = null;
+    
+    const range = DIFFICULTY_SETTINGS[currentDifficulty].aiErrorRange;
+    ai.errorX = (Math.random() - 0.5) * range;
+    ai.errorZ = (Math.random() - 0.5) * (range * 0.15);
+    if(!isPlayerServer) { ai.targetX = ball.x; ai.targetZ = ball.z; }
   }
-  resetBall();
 
-  function updateScoreUI(){
-    scorePlayerEl.textContent = scorePlayer;
-    scoreAIEl.textContent = scoreAI;
+  function recalculateAITarget() {
+    if (ball.vz <= 0) return; 
+    let time = (0.92 - ball.z) / ball.vz;
+    if (time < 0) time = 0;
+    let predX = ball.x + (ball.vx * time);
+    let factor = clamp(Math.abs(ball.vz), 0.3, 0.9);
+    let predZ = lerp(0.76, 0.95, (factor - 0.3) / 0.6); 
+    ai.targetX = clamp(predX + ai.errorX, -1.1, 1.1);
+    ai.targetZ = clamp(predZ + ai.errorZ, 0.75, 0.96);
   }
 
-  function afterPoint(){
-    updateScoreUI();
-    if(scorePlayer >= WIN_SCORE || scoreAI >= WIN_SCORE){
+  function pad(num) { return num < 10 ? '0' + num : num; }
+
+  function playerScores(){ scorePlayer++; playSound('score.mp3'); checkMatchOver(); }
+  function aiScores(){ scoreAI++; playSound('score.mp3'); checkMatchOver(); }
+
+  function checkMatchOver(){
+    scorePlayerEl.textContent = pad(scorePlayer);
+    scoreAIEl.textContent = pad(scoreAI);
+    if(scorePlayer >= 11 || scoreAI >= 11){
       paused = true;
-      overlayWinnerEl.textContent = (scorePlayer > scoreAI) ? "You Win!" : "CPU Wins!";
+      overlayWinnerEl.textContent = (scorePlayer > scoreAI) ? "YOU WIN!" : "COM WINS!";
       overlayEl.classList.add('show');
     } else {
       resetBall();
@@ -280,109 +388,250 @@
 
   restartBtn.addEventListener('click', () => {
     scorePlayer = 0; scoreAI = 0;
-    updateScoreUI();
+    scorePlayerEl.textContent = "00"; scoreAIEl.textContent = "00";
     overlayEl.classList.remove('show');
     paused = false;
     resetBall();
-    lastTime = null;
   });
 
-  setTimeout(() => hintEl.classList.add('fade'), 5500);
+  // ---------------------------------------------------------------
+  // Input Handling
+  // ---------------------------------------------------------------
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight * 0.75;
+  let mouseVX = 0, mouseVY = 0, prevMouseX = 0, prevMouseY = 0;
 
-  // ---------------------------------------------------------------
-  // Update
-  // ---------------------------------------------------------------
+  function setPointer(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    mouseVX = x - prevMouseX;
+    mouseVY = y - prevMouseY;
+    prevMouseX = x; prevMouseY = y;
+    mouseX = x; mouseY = y;
+  }
+  window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    if(e.touches && e.touches[0]){ setPointer(e.touches[0].clientX, e.touches[0].clientY); }
+    e.preventDefault();
+  }, { passive:false });
+
   function update(dt){
     if(paused) return;
 
-    // --- player paddle follows mouse (X = aim, Y = forward reach) ---
-    const targetX = clamp((mouseX - CENTER_X) / (NEAR_WIDTH / 2), -1, 1);
+    for(let i = particles.length - 1; i >= 0; i--){
+      let p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.alpha -= dt * 3;
+      if(p.alpha <= 0) particles.splice(i,1);
+    }
+
+    ball.trail.push({x: ball.x, y:ball.z, h: ball.h});
+    if (ball.trail.length > 3) ball.trail.shift();
+
+    const targetX = clamp((mouseX - CENTER_X) / (NEAR_WIDTH / 2), -1.1, 1.1);
     let rawZ = (mouseY - NEAR_Y) / (FAR_Y - NEAR_Y);
-    const targetZ = clamp(rawZ, 0.02, 0.42);
-    player.x += (targetX - player.x) * 0.22;
-    player.z += (targetZ - player.z) * 0.18;
+    player.x += (targetX - player.x) * 0.24;
+    player.z += (clamp(rawZ, 0.02, 0.40) - player.z) * 0.20;
     if(player.hitPulse > 0) player.hitPulse = Math.max(0, player.hitPulse - dt * 3);
 
-    // --- AI paddle chases the ball with limited reaction speed ---
-    const aiTargetX = clamp(ball.x + ai.error, -1, 1);
-    ai.x += (aiTargetX - ai.x) * 0.065;
+    if (ball.vz > 0) {
+       ai.x += (ai.targetX - ai.x) * DIFFICULTY_SETTINGS[currentDifficulty].aiSpeed * 0.45;
+       ai.z += (ai.targetZ - ai.z) * DIFFICULTY_SETTINGS[currentDifficulty].aiSpeed * 0.45;
+    } else {
+       ai.x += (0 - ai.x) * 0.04;
+       ai.z += (0.94 - ai.z) * 0.04;
+    }
     if(ai.hitPulse > 0) ai.hitPulse = Math.max(0, ai.hitPulse - dt * 3);
 
-    // --- ball motion along Z (depth) and X (lateral) ---
+    const prevZ = ball.z;
     ball.z += ball.vz * dt;
     ball.x += ball.vx * dt;
 
-    // vertical bounce simulation (gravity + damping)
-    ball.vy += -2.6 * dt;
+    if((prevZ < 0.5 && ball.z >= 0.5) || (prevZ >= 0.5 && ball.z < 0.5)){
+      bounceCount = 0; playerSideBounce = false;
+      if(ball.vz > 0) recalculateAITarget();
+    }
+
+    ball.vy += -2.8 * dt;
     ball.h += ball.vy * dt;
+
+    // Ball bounces on the table surface
     if(ball.h <= 0){
       ball.h = 0;
-      ball.vy = -ball.vy * 0.6;
-      if(ball.vy < 0.35) ball.vy = 0.55;
-      ball.squash = 1;
-      spawnEffect(ball.x, ball.z, 'rgba(242,237,226,0.85)');
-    }
-    if(ball.squash > 0) ball.squash = Math.max(0, ball.squash - dt * 4);
+      ball.vy = -ball.vy * 0.65;
+      if(ball.vy < 0.4) ball.vy = 0.6;
+      ball.squash = 0.2; 
 
-    // out of bounds sideways
-    if(Math.abs(ball.x) > 1.15){
-      if(ball.vz > 0) aiScores(); else playerScores();
-      return;
+      playSound('bounce.mp3');
+      spawnEffect(ball.x, ball.z, '#000');
+
+      const onPlayerSide = ball.z < 0.5;
+      
+      // Update our track of which side the ball bounced on
+      lastBounceSide = onPlayerSide ? 'player' : 'ai';
+
+      if ((ball.vz > 0 && onPlayerSide) || (ball.vz < 0 && !onPlayerSide)) {
+        if(onPlayerSide) aiScores(); else playerScores();
+        return;
+      }
+      if(bounceCount > 0 && onPlayerSide === playerSideBounce){
+        if(onPlayerSide) aiScores(); else playerScores();
+        return; 
+      }
+
+      playerSideBounce = onPlayerSide;
+      bounceCount++;
+      if(!onPlayerSide) recalculateAITarget();
     }
 
-    // --- AI hit zone (far side) ---
-    if(ball.vz > 0 && ball.z >= 0.85 && ball.z < 1){
-      if(Math.abs(ball.x - ai.x) < 0.30){
-        ball.vz = -Math.min(Math.abs(ball.vz) * 1.05, 0.85);
-        ball.vx = clamp((ball.x - ai.x) * 1.1 + (Math.random() - 0.5) * 0.1, -0.6, 0.6);
-        ball.vy = 1.0;
-        ball.squash = 1;
+    if(ball.squash > 0) ball.squash = Math.max(0, ball.squash - dt * 5);
+
+    // Out of bounds detection (wide sides check)
+    if(Math.abs(ball.x) > 1.3){ 
+      if (lastBounceSide === 'ai' && ball.vz > 0) {
+        // If it bounced on the AI's side and went out, PLAYER scored a point!
+        playerScores();
+      } else if (lastBounceSide === 'player' && ball.vz < 0) {
+        // If it bounced on Player's side and went out, AI scored!
+        aiScores();
+      } else {
+        // Fallback standard boundary point assignment
+        if(ball.vz > 0) aiScores(); else playerScores();
+      }
+      return; 
+    }
+
+    // AI paddle intersection
+    if(ball.vz > 0 && ball.z >= ai.z - 0.05 && ball.z <= ai.z + 0.05){
+      if(Math.abs(ball.x - ai.x) < 0.16){
+        if(bounceCount === 0 && !playerSideBounce && Math.abs(ball.x) <= 1.05){ playerScores(); return; }
+        ball.vz = -Math.min(Math.abs(ball.vz) * DIFFICULTY_SETTINGS[currentDifficulty].speedUp, 0.9);
+        ball.vx = clamp((ball.x - ai.x) * 1.9 + (Math.random() - 0.5) * 0.1, -1.3, 1.3);
+        ball.vy = 1.1;
         ai.hitPulse = 1;
-        spawnEffect(ball.x, ball.z, 'rgba(120,180,255,0.9)');
+        screenShakeTime = 4; screenShakeIntensity = 2;
+        playSound('hit.mp3');
+        spawnHitParticles(ball.x, ball.z, '#fff');
+        bounceCount = 0; playerSideBounce = false;
+        lastBounceSide = null; // reset bounce history on hit
       }
     }
-    if(ball.z >= 1){ playerScores(); return; }
+    if(ball.z >= 1.04) { playerScores(); return; }
 
-    // --- player hit zone (near side, depends on paddle reach) ---
-    if(ball.vz < 0 && ball.z <= player.z + 0.09 && ball.z > 0){
-      if(Math.abs(ball.x - player.x) < 0.32){
-        ball.vz = Math.min(Math.abs(ball.vz) * 1.05, 0.85);
-        ball.vx = clamp((ball.x - player.x) * 1.2, -0.6, 0.6);
-        ball.vy = 1.0;
-        ball.squash = 1;
+    // Player paddle intersection
+    if(ball.vz < 0 && ball.z <= player.z + 0.08 && ball.z > 0){
+      if(Math.abs(ball.x - player.x) < 0.30){
+        if(!playerSideBounce && Math.abs(ball.x) <= 1.05){ aiScores(); return; }
+        ball.vz = Math.min(Math.abs(ball.vz) * 1.05, 0.9);
+        ball.vx = clamp((ball.x - player.x) * 1.9 + (mouseVX * 0.025), -1.3, 1.3);
+        ball.vy = 1.1;
         player.hitPulse = 1;
-        spawnEffect(ball.x, ball.z, 'rgba(192,57,43,0.9)');
+        screenShakeTime = 4; screenShakeIntensity = 2;
+        playSound('hit.mp3');
+        spawnHitParticles(ball.x, ball.z, '#fff');
+        bounceCount = 0; playerSideBounce = false;
+        lastBounceSide = null; // reset bounce history on hit
       }
     }
-    if(ball.z <= 0){ aiScores(); return; }
+    if(ball.z <= -0.04) { aiScores(); return; }
 
-    // --- effects lifecycle ---
     for(let i = effects.length - 1; i >= 0; i--){
       effects[i].t += dt;
       if(effects[i].t >= effects[i].duration) effects.splice(i, 1);
     }
   }
 
-  function playerScores(){ scorePlayer++; afterPoint(); }
-  function aiScores(){ scoreAI++; afterPoint(); }
+  function drawPixelSprite(targetCtx, cx, cy, scale) {
+    const spriteMatrix = [
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 0, 1, 1, 0, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 1, 1, 1, 1, 0, 1],
+      [1, 1, 0, 0, 0, 0, 1, 1],
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0, 1, 1, 0]
+    ];
+
+    targetCtx.fillStyle = "#632702"; 
+    const basePixel = 2.4 * scale;
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        if (spriteMatrix[row][col] === 1) {
+          targetCtx.fillRect(cx + col * basePixel, cy + row * basePixel, basePixel, basePixel);
+        }
+      }
+    }
+  }
 
   // ---------------------------------------------------------------
-  // Draw
+  // Optimization: Pre-render Background Layer ONCE
   // ---------------------------------------------------------------
-  function drawBackground(){
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#0a1420');
-    g.addColorStop(0.45, '#101f30');
-    g.addColorStop(1, '#182635');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+  function preRenderBackground(){
+    bgCanvas.width = W;
+    bgCanvas.height = H;
 
-    // soft spotlight glow toward the vanishing point
-    const glow = ctx.createRadialGradient(CENTER_X, FAR_Y, 10, CENTER_X, FAR_Y, W * 0.5);
-    glow.addColorStop(0, 'rgba(201,161,90,0.14)');
-    glow.addColorStop(1, 'rgba(201,161,90,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
+    // Court floor background
+    bgCtx.fillStyle = "#a84e16";
+    bgCtx.fillRect(0, 0, W, H);
+
+    let nearXOffset = NEAR_WIDTH * 0.75;
+    let farXOffset = FAR_WIDTH * 0.75;
+
+    let leftNearX = CENTER_X - nearXOffset;
+    let leftFarX = CENTER_X - farXOffset;
+    let rightNearX = CENTER_X + nearXOffset;
+    let rightFarX = CENTER_X + farXOffset;
+
+    // 1. LEFT SIDE PERSPECTIVE SEATING STRIP
+    bgCtx.fillStyle = "#fcaa03";
+    bgCtx.beginPath();
+    bgCtx.moveTo(0, 0);
+    bgCtx.lineTo(leftFarX, 0);
+    bgCtx.lineTo(leftNearX, H);
+    bgCtx.lineTo(0, H);
+    bgCtx.closePath();
+    bgCtx.fill();
+
+    // 2. RIGHT SIDE PERSPECTIVE SEATING STRIP
+    bgCtx.fillStyle = "#fcaa03";
+    bgCtx.beginPath();
+    bgCtx.moveTo(rightFarX, 0);
+    bgCtx.lineTo(W, 0);
+    bgCtx.lineTo(W, H);
+    bgCtx.lineTo(rightNearX, H);
+    bgCtx.closePath();
+    bgCtx.fill();
+
+    // 3. DRAW AUDIENCE CHARACTERS INTO PRE-RENDER CACHE
+    for (let y = 15; y < H - 15; y += 38) {
+      let progress = y / H; 
+      let currentLeftBarrierX = lerp(leftFarX, leftNearX, progress);
+      let currentRightBarrierX = lerp(rightFarX, rightNearX, progress);
+      let currentScale = lerp(0.45, 1.1, progress);
+
+      for (let x = 15; x < currentLeftBarrierX - 25; x += (40 * currentScale)) {
+         drawPixelSprite(bgCtx, x, y, currentScale);
+      }
+      for (let x = currentRightBarrierX + 15; x < W - 25; x += (40 * currentScale)) {
+         drawPixelSprite(bgCtx, x, y, currentScale);
+      }
+    }
+
+    // 4. Perspective Blue Line Barriers
+    bgCtx.strokeStyle = "#3a69cf";
+    bgCtx.lineWidth = 6;
+    
+    bgCtx.beginPath();
+    bgCtx.moveTo(leftFarX, 0);
+    bgCtx.lineTo(leftNearX, H);
+    bgCtx.stroke();
+
+    bgCtx.beginPath();
+    bgCtx.moveTo(rightFarX, 0);
+    bgCtx.lineTo(rightNearX, H);
+    bgCtx.stroke();
   }
 
   function tableCorners(){
@@ -397,196 +646,156 @@
   function drawTable(){
     const c = tableCorners();
 
-    // table surface
-    const g = ctx.createLinearGradient(0, FAR_Y, 0, NEAR_Y);
-    g.addColorStop(0, '#0f5a3f');
-    g.addColorStop(1, '#1f9165');
+    // Under-table shadow area
+    ctx.fillStyle = "#000000";
     ctx.beginPath();
-    ctx.moveTo(c.nearL.x, c.nearL.y);
-    ctx.lineTo(c.nearR.x, c.nearR.y);
-    ctx.lineTo(c.farR.x, c.farR.y);
-    ctx.lineTo(c.farL.x, c.farL.y);
+    ctx.moveTo(CENTER_X - NEAR_WIDTH * 0.38, NEAR_Y);
+    ctx.lineTo(CENTER_X + NEAR_WIDTH * 0.38, NEAR_Y);
+    ctx.lineTo(CENTER_X + NEAR_WIDTH * 0.38, NEAR_Y + 70);
+    ctx.lineTo(CENTER_X - NEAR_WIDTH * 0.38, NEAR_Y + 70);
     ctx.closePath();
-    ctx.fillStyle = g;
     ctx.fill();
 
-    // boundary lines
-    ctx.strokeStyle = 'rgba(242,237,226,0.9)';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    // Legs
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(c.nearL.x + 10, c.nearL.y); ctx.lineTo(c.nearL.x + 10, c.nearL.y + 90); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(c.nearR.x - 10, c.nearR.y); ctx.lineTo(c.nearR.x - 10, c.nearR.y + 90); ctx.stroke();
 
-    // center length-wise line
+    // Surface
+    ctx.fillStyle = '#3a69cf'; 
     ctx.beginPath();
-    ctx.moveTo(CENTER_X, NEAR_Y);
-    ctx.lineTo(CENTER_X, FAR_Y);
-    ctx.strokeStyle = 'rgba(242,237,226,0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // front apron (table thickness cue)
-    ctx.beginPath();
-    ctx.moveTo(c.nearL.x, c.nearL.y);
-    ctx.lineTo(c.nearR.x, c.nearR.y);
-    ctx.lineTo(c.nearR.x, c.nearR.y + 14);
-    ctx.lineTo(c.nearL.x, c.nearL.y + 14);
+    ctx.moveTo(c.nearL.x, c.nearL.y); ctx.lineTo(c.nearR.x, c.nearR.y);
+    ctx.lineTo(c.farR.x, c.farR.y);   ctx.lineTo(c.farL.x, c.farL.y);
     ctx.closePath();
-    ctx.fillStyle = '#0a3d2a';
     ctx.fill();
+
+    // Outlines
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4; 
+    ctx.beginPath();
+    ctx.moveTo(c.nearL.x, c.nearL.y); ctx.lineTo(c.nearR.x, c.nearR.y);
+    ctx.lineTo(c.farR.x, c.farR.y);   ctx.lineTo(c.farL.x, c.farL.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Center Line
+    ctx.beginPath(); ctx.moveTo(CENTER_X, NEAR_Y); ctx.lineTo(CENTER_X, FAR_Y);
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
   }
 
   function drawNet(){
-    const z = 0.5;
-    const y = tableYAtZ(z);
-    const width = tableWidthAtZ(z);
-    const scale = scaleAtZ(z);
-    const left = CENTER_X - width/2;
-    const right = CENTER_X + width/2;
-    const height = 42 * scale;
+    const z = 0.5, y = tableYAtZ(z), width = tableWidthAtZ(z), scale = scaleAtZ(z);
+    const left = CENTER_X - width/2 - 6, right = CENTER_X + width/2 + 6;
+    const netHeight = 24 * scale;
 
-    // mesh
-    ctx.save();
-    ctx.globalAlpha = 0.55;
-    ctx.fillStyle = '#f2ede2';
-    ctx.fillRect(left, y - height, right - left, height);
-    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(left, y - netHeight, right - left, netHeight);
 
-    ctx.strokeStyle = 'rgba(13,27,42,0.35)';
-    ctx.lineWidth = 1;
-    const stripes = 22;
-    for(let i = 0; i <= stripes; i++){
-      const x = lerp(left, right, i/stripes);
-      ctx.beginPath();
-      ctx.moveTo(x, y - height);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // top tape
-    ctx.fillStyle = '#f2ede2';
-    ctx.fillRect(left, y - height - 3, right - left, 4);
-
-    // posts
-    ctx.strokeStyle = '#0d1b2a';
-    ctx.lineWidth = 3 * scale;
-    ctx.beginPath();
-    ctx.moveTo(left, y - height - 3);
-    ctx.lineTo(left, y + 4);
-    ctx.moveTo(right, y - height - 3);
-    ctx.lineTo(right, y + 4);
-    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(left, y - netHeight, right - left, 3);
+    ctx.fillRect(left, y, 3, -netHeight);
+    ctx.fillRect(right - 3, y, 3, -netHeight);
   }
-
+  
   function drawEffects(){
     effects.forEach(e => {
       const t = e.t / e.duration;
       const scale = scaleAtZ(e.z);
-      const r = lerp(6, 46, t) * scale;
-      const sx = xToScreen(e.x, e.z);
-      const sy = tableYAtZ(e.z);
-      ctx.save();
-      ctx.globalAlpha = (1 - t) * 0.8;
+      const r = Math.max(1, lerp(4, 25, t) * scale);
       ctx.strokeStyle = e.color;
-      ctx.lineWidth = 2.5 * scale;
-      ctx.beginPath();
-      ctx.ellipse(sx, sy, r, r * 0.35, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+      ctx.lineWidth = 3;
+      ctx.strokeRect(xToScreen(e.x, e.z) - r, tableYAtZ(e.z) - r*0.3, r*2, r*0.6);
+    });
+
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
     });
   }
 
   function drawPaddle(entity, mainColor, darkColor){
     const scale = scaleAtZ(entity.z);
-    const pulse = 1 + entity.hitPulse * 0.28;
     const sx = xToScreen(entity.x, entity.z);
     const sy = tableYAtZ(entity.z) - 10 * scale;
-    const r = 30 * scale * pulse;
+    const r = Math.max(6, 22 * scale);
 
-    // handle
-    ctx.save();
-    ctx.fillStyle = darkColor;
-    ctx.fillRect(sx - 5*scale, sy + r*0.55, 10*scale, 22*scale);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(sx - 3*scale, sy, 6*scale, 28*scale);
 
-    // blade
-    const g = ctx.createRadialGradient(sx - r*0.3, sy - r*0.3, r*0.1, sx, sy, r);
-    g.addColorStop(0, mainColor);
-    g.addColorStop(1, darkColor);
+    ctx.fillStyle = mainColor;
     ctx.beginPath();
-    ctx.ellipse(sx, sy, r, r * 0.82, 0, 0, Math.PI * 2);
-    ctx.fillStyle = g;
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(13,27,42,0.6)';
-    ctx.lineWidth = 2 * scale;
+    
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.restore();
   }
 
-  function drawBall(){
+  function drawBall() {
+    const bx = ballXToCanvas(ball.x);
+    const bzY = tableYAtZ(ball.z);
     const scale = scaleAtZ(ball.z);
-    const baseY = tableYAtZ(ball.z);
-    const sx = xToScreen(ball.x, ball.z);
-    const heightPx = ball.h * 70 * scale;
-    const sy = baseY - heightPx - 5 * scale;
-    const rBase = 15 * scale;
-    const squashX = rBase * (1 + ball.squash * 0.45);
-    const squashY = rBase * (1 - ball.squash * 0.35);
+    const ballRadius = Math.max(3, 8 * scale);
+    const actualBallY = bzY - (ball.h * 160 * scale);
 
-    // shadow on table
-    const shadowAlpha = clamp(0.45 - ball.h * 0.25, 0.08, 0.45);
-    ctx.save();
-    ctx.globalAlpha = shadowAlpha;
-    ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.ellipse(sx, baseY, rBase * 1.15, rBase * 0.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(bx - ballRadius, bzY - ballRadius*0.3, ballRadius*2, ballRadius*0.6);
 
-    // ball
-    const g = ctx.createRadialGradient(sx - squashX*0.3, sy - squashY*0.3, 1, sx, sy, squashX);
-    g.addColorStop(0, '#ffe3b0');
-    g.addColorStop(0.55, '#f2a340');
-    g.addColorStop(1, '#c97318');
+    ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.ellipse(sx, sy, squashX, squashY, 0, 0, Math.PI * 2);
-    ctx.fillStyle = g;
+    ctx.arc(bx, actualBallY, ballRadius, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(13,27,42,0.35)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
   function draw(){
+    ctx.save();
+    if(screenShakeTime > 0){
+      ctx.translate((Math.random() - 0.5) * screenShakeIntensity, (Math.random() - 0.5) * screenShakeIntensity);
+      screenShakeTime--;
+    }
     ctx.clearRect(0, 0, W, H);
-    drawBackground();
+    
+    // Stamp the optimized background down instantly
+    ctx.drawImage(bgCanvas, 0, 0);
+    
     drawTable();
     drawNet();
     drawEffects();
 
-    const items = [
-      { z: ai.z,     fn: () => drawPaddle(ai, '#5b8fdb', '#1e4a8a') },
+    const renderLayers = [
+      { z: ai.z,    fn: () => drawPaddle(ai, '#63f576', '#128220') }, 
       { z: ball.z,   fn: drawBall },
-      { z: player.z, fn: () => drawPaddle(player, '#e05a4a', '#8f1f1f') }
+      { z: player.z, fn: () => drawPaddle(player, '#f562cc', '#9e1b7a') } 
     ];
-    items.sort((a, b) => b.z - a.z);
-    items.forEach(it => it.fn());
+    renderLayers.sort((a, b) => b.z - a.z);
+    renderLayers.forEach(layer => layer.fn());
+
+    ctx.restore();
   }
 
-  // ---------------------------------------------------------------
-  // Main loop
-  // ---------------------------------------------------------------
   let lastTime = null;
   function loop(ts){
     if(lastTime == null) lastTime = ts;
     let dt = (ts - lastTime) / 1000;
     lastTime = ts;
-    dt = Math.min(dt, 0.05);
-
-    update(dt);
-    draw();
+    try {
+      update(Math.min(dt, 0.04));
+      draw();
+    } catch(err) {
+      console.error(err);
+    }
     requestAnimationFrame(loop);
   }
+  
+  resize();
+  window.addEventListener('resize', resize);
+  resetBall();
   requestAnimationFrame(loop);
-
 })();
 </script>
 </body>
