@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Table Tennis Championship</title>
+<style>
+  :root{
+    --cream:#f2ede2;
+    --bronze:#c9a15a;
+    --steel:#3f6fae;
+    --brick:#c0392b;
+    --ink:#080e14;
+  }
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:#000;
+    overflow:hidden;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action:none;
+  }
+  canvas{
+    display:block;
+    cursor:none;
+    width:100vw;
+    height:100vh;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* ---------- Retro Floating Scoreboard ---------- */
+  #scoreboard{
+    position:fixed;
+    top:25px; left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    align-items:center;
+    background:#000000;
+    border:4px solid #ffffff;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.4);
+    padding:6px 20px;
+    z-index:10;
+    user-select:none;
+  }
+  .score-side{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .score-label{
+    font-family: 'Courier New', Courier, monospace;
+    font-size:24px;
+    font-weight:900;
+    text-transform:uppercase;
+    color:#ffffff;
+  }
+  .score-value{
+    font-family:'Courier New', Courier, monospace;
+    font-size:32px;
+    font-weight:bold;
+    color:#ffffff;
+    min-width:40px;
+    text-align:center;
+  }
+  .score-divider{
+    font-family: 'Courier New', Courier, monospace;
+    font-size:24px;
+    color:#ffffff;
+    margin:0 15px;
+    font-weight:900;
+  }
+
+  /* ---------- Controls & Overlay ---------- */
+  #controlPanel{
+    position:fixed;
+    top:18px; left:18px;
+    display:flex;
+    gap:12px;
+    z-index:15;
+  }
+  #controlPanel button{
+    background:#000;
+    color:#fff;
+    border:2px solid #fff;
+    width: 44px;
+    height: 44px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    cursor:pointer;
+  }
+
+  #menuModal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:30;
+  }
+  #menuModal.show{ display:flex; }
+  #menuContent{
+    background:#4a2306;
+    border:4px solid #fca103;
+    padding: 30px 40px;
+    text-align:center;
+    max-width: 260px;
+  }
+  #menuContent h3{
+    color:#fca103;
+    margin-top:0;
+    margin-bottom:18px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  .difficulty-group{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .diff-option{
+    background: #000;
+    color:#fff;
+    border:2px solid #fff;
+    padding:10px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .diff-option.active{
+    background: #fca103;
+    color:#000;
+    border-color:#fff;
+  }
+  #closeMenuBtn{
+    background:#fff;
+    color:#000;
+    border:2px solid #000;
+    padding:8px 20px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top: 10px;
+  }
+
+  #overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.9);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    z-index:20;
+  }
+  #overlay.show{ display:flex; }
+  #overlayTitle{ color:#fff; font-family:'Courier New', monospace; font-size:20px; margin-bottom:8px; }
+  #overlayWinner{ color:#fca103; font-family:'Courier New', monospace; font-size:44px; font-weight:700; margin-bottom:28px; }
+  #restartBtn{ background:#fff; color:#000; border:4px solid #000; padding:12px 30px; font-size:15px; font-weight:700; cursor:pointer; }
+  @keyframes scoreFlash {
+    0% { background:#fca103;
+    color:#000;}
+    100% { background:#000;
+    color:#fff;}
+  }
+  .score-value.flash { animation: scoreFlash 0.5s ease-out;}
+
+</style>
+</head>
+<body>
+
+<div id="controlPanel">
+  <button id="menuBtn" title="Open Menu">☰</button>
+  <button id="pauseBtn" title="Toggle Pause State">⏸️</button>
+</div>
+
+<div id="menuModal">
+  <div id="menuContent">
+    <h3>DIFFICULTY</h3>
+    <div class="difficulty-group">
+      <button class="diff-option active" data-diff="easy">EASY</button>
+      <button class="diff-option" data-diff="medium">MEDIUM</button>
+      <button class="diff-option" data-diff="hard">HARD</button>
+    </div>
+    <hr style="border:0; border-top:2px solid #fff; margin:20px 0;">
+    <button id="closeMenuBtn">RESUME</button>
+  </div>
+</div>
+
+<div id="scoreboard">
+  <div class="score-side">
+    <div class="score-label" id="playerLabel">YOU</div>
+    <div class="score-value" id="scorePlayer">00</div>
+  </div>
+  <div class="score-divider" id="scoreDivider">-</div>
+  <div class="score-side">
+    <div class="score-label" id="aiLabel">COM</div>
+    <div class="score-value" id="scoreAI">00</div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="overlayTitle">MATCH OVER</div>
+  <div id="overlayWinner">YOU WIN!</div>
+  <button id="restartBtn">PLAY AGAIN</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+(function(){
+  "use strict";
+
+  function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+  function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Offscreen Canvas for Pre-rendering Background Graphics
+  const bgCanvas = document.createElement('canvas');
+  const bgCtx = bgCanvas.getContext('2d');
+
+  const scorePlayerEl = document.getElementById('scorePlayer');
+  const scoreAIEl = document.getElementById('scoreAI');
+  const overlayEl = document.getElementById('overlay');
+  const overlayWinnerEl = document.getElementById('overlayWinner');
+  const restartBtn = document.getElementById('restartBtn');
+  const scoreDividerEl = document.getElementById('scoreDivider');
+  const menuBtn = document.getElementById('menuBtn');
+  const pauseBtn = document.getElementById('pauseBtn'); 
+  const menuModal = document.getElementById('menuModal');
+  const closeMenuBtn = document.getElementById('closeMenuBtn');
+  const diffOptions = document.querySelectorAll('.diff-option');
+
+  const DIFFICULTY_SETTINGS = {
+    easy: { aiErrorRange: 0.52, aiSpeed: 0.028, speedUp: 1.02 },
+    medium: { aiErrorRange: 0.38, aiSpeed: 0.04, speedUp: 1.05 },
+    hard: { aiErrorRange: 0.18, aiSpeed: 0.065, speedUp: 1.1 }
+  };
+  let currentDifficulty = 'easy';
+
+  let screenShakeTime = 0;
+  let screenShakeIntensity = 0;
+  let paused = false;
+  let menuOpen = false;
+  let userPaused = false;
+  let matchOver = false;
+
+  let serveState = 'ready';
+  let pendingServe = { vx: 0, vz: 0.44}
+
+  let rally = 0; 
+  let bestRally = 0;
+  try { bestRally = parseInt(localStorage.getItem('pp_bestRally') || '0', 10) || 0; }
+  catch(e) {}
+
+
+// 1. Setup Audio Objects
+  const bounceSound = new Audio('bounce.mp3');
+  const hitSound = new Audio('hit.mp3');
+  const scoreSound = new Audio('score.mp3');
+  const net = new Audio('net.mp3');
+
+  // 2. Add an unlock listener
+  let audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    // Play empty sounds to unlock
+    bounceSound.play().catch(()=>{});
+    hitSound.play().catch(()=>{});
+    scoreSound.play().catch(()=>{});
+    net.play().catch(()=>{});
+    audioUnlocked = true;
+    window.removeEventListener('click', unlockAudio);
+    window.removeEventListener('touchstart', unlockAudio);
+  }
+  window.addEventListener('click', unlockAudio);
+  window.addEventListener('touchstart', unlockAudio);
+
+  // 3. Updated playSound function
+  function playSound(type) {
+    let sound;
+    if (type === 'bounce.mp3') sound = bounceSound;
+    else if (type === 'hit.mp3') sound = hitSound;
+    else if (type === 'score.mp3') sound = scoreSound;
+    else if (type === 'net.mp3') sound = net;
+
+    if (sound) {
+      sound.currentTime = 0;
+      sound.play().catch(e => console.log("Audio locked, click screen to unlock"));
+    }
+  }
+
+  diffOptions.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      diffOptions.forEach(opt => opt.classList.remove('active'));
+      e.target.classList.add('active');
+      currentDifficulty = e.target.getAttribute('data-diff');
+      resetBall();
+    });
+  });
+
+
+//pause menu wiring
+
+function syncPauseButtonState() {
+  paused = menuOpen || 
+  userPaused || matchOver;
+    pauseBtn.textContent = paused ? '▶️' : '⏸️';
+}
+
+
+menuBtn.addEventListener('click', () => {
+  menuOpen = true;
+
+  menuModal.classList.add('show');
+  syncPauseButtonState();
+});
+
+closeMenuBtn.addEventListener('click', () => {
+  menuOpen = false;
+  menuModal.classList.remove('show');
+  syncPauseButtonState();
+});
+
+pauseBtn.addEventListener('click', () => {
+  userPaused = !userPaused;
+  syncPauseButtonState();
+});
+
+window.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') {
+    menuOpen = !menuOpen;
+    menuModal.classList.toggle('show', menuOpen);
+    syncPauseButtonState();
+  }
+  if(e.key === 'p' || e.key === 'P') {
+    userPaused = !userPaused;
+    syncPauseButtonState();
+  }
+});
+
+
+
+
+  // ---------------------------------------------------------------
+  // Perspective & Grid Geometry
+  // ---------------------------------------------------------------
+  let W, H, NEAR_Y, FAR_Y, NEAR_WIDTH, FAR_WIDTH, CENTER_X;
+  const FAR_SCALE = 0.42;
+
+  function tableWidthAtZ(z){ return NEAR_WIDTH + (FAR_WIDTH - NEAR_WIDTH) * z; }
+  function tableYAtZ(z){ return NEAR_Y + (FAR_Y - NEAR_Y) * z; }
+  function scaleAtZ(z){ return Math.max(0.05, 1 - z * (1 - FAR_SCALE)); }
+  function xToScreen(x, z){ return CENTER_X + x * (tableWidthAtZ(z) / 2); }
+  function ballXToCanvas(x){ return xToScreen(x, ball.z); }
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    
+    FAR_Y = H * 0.48;         
+    NEAR_Y = H * 0.88;        
+    
+    CENTER_X = W / 2;
+    NEAR_WIDTH = Math.min(W * 0.52, 600);
+    FAR_WIDTH = NEAR_WIDTH * FAR_SCALE;
+
+    preRenderBackground();
+  }
+
+  // ---------------------------------------------------------------
+  // Game Objects
+  // ---------------------------------------------------------------
+  const player = { x: 0, z: 0.05, hitPulse: 0 };
+  const ai = { x: 0, z: 0.94, hitPulse: 0, errorX: 0, errorZ: 0, targetX: 0, targetZ: 0.94 };
+  const ball = { x: 0, z: 0.5, h: 1.1, vx: 0, vy: 0, vz: 0, squash: 0, trail: [] };
+
+  let scorePlayer = 0, scoreAI = 0, bounceCount = 0;
+  let playerSideBounce = false;
+  let lastBounceSide = null; // Track side of the last valid bounce ('player' or 'ai')
+  let effects = [];
+  let particles = [];
+
+  function spawnHitParticles(x, z, color, count = 8) {
+    const sx = xToScreen(x, z);
+    const sy = tableYAtZ(z) - (ball.h * 160 * scaleAtZ(z));
+    for(let i=0; i<count; i++){
+      particles.push({
+        x: sx, y: sy,
+        vx: (Math.random() - 0.5) * 120,
+        vy: (Math.random() - 0.7) * 120,
+        alpha: 1,
+        color: '#ffffff', 
+        size: Math.random() * 4 + 2
+      });
+    }
+  }
+
+  function spawnEffect(x, z, color) {
+    effects.push({ x: x, z: z, color: color, t: 0, duration: 0.2 });
+  }
+
+  function resetBall(){
+    const total = scorePlayer + scoreAI;
+    const isPlayerServer = isDeuce() ? (total % 2 === 0) : (total % 4 < 2);
+    ball.x = 0;
+    ball.z = isPlayerServer ? 0.16 : 0.84;
+
+    //hold serve till player ready
+    pendingServe.vx = (Math.random() - 0.5) * 0.15;
+    pendingServe.vz = isPlayerServer ? 0.44 : -0.44;
+    ball.vx = 0;
+    ball.vz = 0;
+    ball.vy = 0;
+    serveState = 'ready';
+
+    ball.h = 1.4;
+    ball.squash = 0;
+    ball.trail = [];
+    bounceCount = 0;
+    playerSideBounce = false;
+    lastBounceSide = null;
+    
+    const range = DIFFICULTY_SETTINGS[currentDifficulty].aiErrorRange;
+    ai.errorX = (Math.random() - 0.5) * range;
+    ai.errorZ = (Math.random() - 0.5) * (range * 0.15);
+    if(!isPlayerServer) { ai.targetX = ball.x; ai.targetZ = ball.z; }
+
+    function launchServe(){
+      if(serveState !== 'ready' || paused) return;
+        ball.vx = pendingServe.vx;
+        ball.vz = pendingServe.vz;
+        ball.vy = 0;
+        serveState = 'playing';
+        if(ball.vz > 0){recalculateAITarget();
+        }
+    }
+
+    function handleServeInput(e){
+      if(e.target && e.target.closest && e.target.closest('button'))
+      return;
+    launchServe()
+    }
+
+    window.addEventListener('mousedown', handleServeInput);
+    window.addEventListener('touchstart', handleServeInput);  
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space'){
+      e.preventDefault();
+      launchServe();
+    }});
+
+  }
+
+  function recalculateAITarget() {
+    if (ball.vz <= 0) return; 
+    let time = (0.92 - ball.z) / ball.vz;
+    if (time < 0) time = 0;
+    let predX = ball.x + (ball.vx * time);
+    let factor = clamp(Math.abs(ball.vz), 0.3, 0.9);
+    let predZ = lerp(0.76, 0.95, (factor - 0.3) / 0.6); 
+    ai.targetX = clamp(predX + ai.errorX, -1.1, 1.1);
+    ai.targetZ = clamp(predZ + ai.errorZ, 0.75, 0.96);
+  }
+
+  function pad(num) { return num < 10 ? '0' + num : num; }
+
+  function endRally(){
+    if (rally > bestRally) {
+      bestRally = rally;
+      try {
+        localStorage.setItem('pp_bestRally', String(bestRally));
+      } catch (e) {}
+    }
+    rally = 0;
+  }
+
+  function drawrally(){
+    ctx.save();
+    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText('RALLY ' + rally, 18, H - 44);
+    ctx.fillStyle = 'rgba(252, 151, 3, 0.9)';
+    ctx.fillText('BEST ' + bestRally, 18, H - 22);
+    ctx.restore(); 
+  }
+
+  function playerScores(){endRally(), scorePlayer++; playSound('score.mp3'); checkMatchOver(); }
+  function aiScores(){endRally(), scoreAI++; playSound('score.mp3'); checkMatchOver(); }
+
+  const WIN_SCORE = 11;
+
+  function isDeuce(){
+  return scorePlayer >= WIN_SCORE - 1 && scoreAI >= WIN_SCORE - 1;
+  }
+
+  function flashScore(el){
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+  }
+
+
+  function checkMatchOver(){
+    scorePlayerEl.textContent = pad(scorePlayer);
+    scoreAIEl.textContent = pad(scoreAI);
+    flashScore(scorePlayer > scoreAI ? scorePlayerEl : scoreAIEl);
+
+    scoreDividerEl.textContent = isDeuce() ? 'DEUCE' : '-';
+      const leader = Math.max(scorePlayer, scoreAI);
+      const gap = Math.abs(scorePlayer - scoreAI);
+      
+      if(leader >= WIN_SCORE && gap >= 2){
+        matchOver = true;
+        syncPauseButtonState();
+        overlayWinnerEl.textContent = (scorePlayer > scoreAI) ? "YOU WIN!!!" : "COM WINS :<";
+        overlayEl.classList.add('show');
+      } else {
+        resetBall()
+      }
+  }
+
+  restartBtn.addEventListener('click', () => {
+    scorePlayer = 0; scoreAI = 0;
+    scorePlayerEl.textContent = "00"; scoreAIEl.textContent = "00";
+    scoreDividerEl.textContent = "-";
+    overlayEl.classList.remove('show');
+    matchOver = false;
+    rally = 0;
+    syncPauseButtonState();
+    resetBall();
+  });
+
+  // ---------------------------------------------------------------
+  // Input Handling
+  // ---------------------------------------------------------------
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight * 0.75;
+  let mouseVX = 0, mouseVY = 0, prevMouseX = 0, prevMouseY = 0;
+
+  function setPointer(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    mouseVX = x - prevMouseX;
+    mouseVY = y - prevMouseY;
+    prevMouseX = x; prevMouseY = y;
+    mouseX = x; mouseY = y;
+  }
+  window.addEventListener('mousemove', e => setPointer(e.clientX, e.clientY));
+  window.addEventListener('touchmove', e => {
+    if(e.touches && e.touches[0]){ setPointer(e.touches[0].clientX, e.touches[0].clientY); }
+    e.preventDefault();
+  }, { passive:false });
+
+  function update(dt){
+    if(paused) return;
+
+    for(let i = particles.length - 1; i >= 0; i--){
+      let p = particles[i];
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.alpha -= dt * 3;
+      if(p.alpha <= 0) particles.splice(i,1);
+    }
+
+
+    //note: key renamed from "y" to "z" to match what it actually is
+    if(serveState === 'playing'){
+      ball.trail.push({ x: ball.x, z: ball.z, h: ball.h});
+      if(ball.trail.length > 8)
+      ball.trail.shift();
+    }
+
+
+    const targetX = clamp((mouseX - CENTER_X) / (NEAR_WIDTH / 2), -1.1, 1.1);
+    let rawZ = (mouseY - NEAR_Y) / (FAR_Y - NEAR_Y);
+    player.x += (targetX - player.x) * 0.24;
+    player.z += (clamp(rawZ, 0.02, 0.40) - player.z) * 0.20;
+    if(player.hitPulse > 0) player.hitPulse = Math.max(0, player.hitPulse - dt * 4);
+
+    if (ball.vz > 0) {
+       ai.x += (ai.targetX - ai.x) * DIFFICULTY_SETTINGS[currentDifficulty].aiSpeed * 0.45;
+       ai.z += (ai.targetZ - ai.z) * DIFFICULTY_SETTINGS[currentDifficulty].aiSpeed * 0.45;
+    } else {
+       ai.x += (0 - ai.x) * 0.04;
+       ai.z += (0.94 - ai.z) * 0.04;
+    }
+    if(ai.hitPulse > 0) ai.hitPulse = Math.max(0, ai.hitPulse - dt * 4);
+
+    if(serveState === 'ready'){
+      ball.h = 1.25 + Math.sin(performance.now() * 0.005) * 0.06;
+      ball.squash = 0;
+      return
+    }
+
+    const prevZ = ball.z;
+    ball.z += ball.vz * dt;
+    ball.x += ball.vx * dt;
+
+
+    //net heighth in ball.h units: drawNet() uses 24px, drawBall() uses 160px per unit 
+    const NET_H = 0.2;
+    
+    if((prevZ < 0.5 && ball.z >= 0.5) || (prevZ >= 0.5 && ball.z < 0.5)){
+      if (ball.h < NET_H){
+        playSound('net.mp3'); //ADD NET SOUNDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD
+        spawnHitParticles(ball.x, 0.5, '#ffffff', 10);
+        screenShakeTime = 0.15;
+        screenShakeIntensity = 5;
+          if(prevZ < 0.5)
+          aiScores(); else playerScores();
+          return;
+      }
+      bounceCount = 0; playerSideBounce = false;
+      if(ball.vz > 0) recalculateAITarget();
+    }
+
+    ball.vy += -2.8 * dt;
+    ball.h += ball.vy * dt;
+
+    // Ball bounces on the table surface
+    if(ball.h <= 0){
+      ball.h = 0;
+      ball.vy = -ball.vy * 0.65;
+      if(ball.vy < 0.4) ball.vy = 0.6;
+      ball.squash = 1; 
+
+      playSound('bounce.mp3');
+      spawnEffect(ball.x, ball.z, '#000');
+
+      const onPlayerSide = ball.z < 0.5;
+      
+      // Update our track of which side the ball bounced on
+      lastBounceSide = onPlayerSide ? 'player' : 'ai';
+
+      if ((ball.vz > 0 && onPlayerSide) || (ball.vz < 0 && !onPlayerSide)) {
+        if(onPlayerSide) aiScores(); else playerScores();
+        return;
+      }
+      if(bounceCount > 0 && onPlayerSide === playerSideBounce){
+        if(onPlayerSide) aiScores(); else playerScores();
+        return; 
+      }
+
+      playerSideBounce = onPlayerSide;
+      bounceCount++;
+      if(!onPlayerSide) recalculateAITarget();
+    }
+
+    if(ball.squash > 0) ball.squash = Math.max(0, ball.squash - dt * 8);
+
+    // Out of bounds detection (wide sides check)
+    if(Math.abs(ball.x) > 1.04){ 
+      if (lastBounceSide === 'ai' && ball.vz > 0) {
+        // If it bounced on the AI's side and went out, PLAYER scored a point!
+        playerScores();
+      } else if (lastBounceSide === 'player' && ball.vz < 0) {
+        // If it bounced on Player's side and went out, AI scored!
+        aiScores();
+      } else {
+        // Fallback standard boundary point assignment
+        if(ball.vz > 0) aiScores(); else playerScores();
+      }
+      return; 
+    }
+
+    // AI paddle intersection
+    if(ball.vz > 0 && ball.z >= ai.z - 0.05 && ball.z <= ai.z + 0.05){
+      if(Math.abs(ball.x - ai.x) < 0.16){
+        if(bounceCount === 0 && !playerSideBounce && Math.abs(ball.x) <= 1.05){ playerScores(); return; }
+        ball.vz = -Math.min(Math.abs(ball.vz) * DIFFICULTY_SETTINGS[currentDifficulty].speedUp, 0.9);
+        ball.vx = clamp((ball.x - ai.x) * 1.9 + (Math.random() - 0.5) * 0.1, -1.3, 1.3);
+        ball.vy = 1.1;
+        ai.hitPulse = 1;
+        rally++;
+        screenShakeTime = 4; screenShakeIntensity = 2;
+        playSound('hit.mp3');
+        spawnHitParticles(ball.x, ball.z, '#fff');
+        bounceCount = 0; playerSideBounce = false;
+        lastBounceSide = null; // reset bounce history on hit
+      }
+    }
+    if(ball.z >= 1.04) { playerScores(); return; }
+
+    // Player paddle intersection
+    if(ball.vz < 0 && ball.z <= player.z + 0.08 && ball.z > 0){
+      if(Math.abs(ball.x - player.x) < 0.30){
+        if(!playerSideBounce && Math.abs(ball.x) <= 1.05){ aiScores(); return; }
+        ball.vz = Math.min(Math.abs(ball.vz) * 1.05, 0.9);
+        ball.vx = clamp((ball.x - player.x) * 1.9 + (mouseVX * 0.025), -1.3, 1.3);
+        ball.vy = 1.1;
+        player.hitPulse = 1;
+        rally++;
+        screenShakeTime = 4; screenShakeIntensity = 2;
+        playSound('hit.mp3');
+        spawnHitParticles(ball.x, ball.z, '#fff');
+        bounceCount = 0; playerSideBounce = false;
+        lastBounceSide = null; // reset bounce history on hit
+      }
+    }
+    if(ball.z <= -0.04) { aiScores(); return; }
+
+    for(let i = effects.length - 1; i >= 0; i--){
+      effects[i].t += dt;
+      if(effects[i].t >= effects[i].duration) effects.splice(i, 1);
+    }
+  }
+
+  function drawPixelSprite(targetCtx, cx, cy, scale) {
+    const spriteMatrix = [
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [1, 1, 0, 1, 1, 0, 1, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 1, 1, 1, 1, 0, 1],
+      [1, 1, 0, 0, 0, 0, 1, 1],
+      [0, 1, 1, 1, 1, 1, 1, 0],
+      [0, 0, 1, 0, 0, 1, 0, 0],
+      [0, 1, 1, 0, 0, 1, 1, 0]
+    ];
+
+    targetCtx.fillStyle = "#632702"; 
+    const basePixel = 2.4 * scale;
+    for (let row = 0; row < 8; row++) {
+      for (let col = 0; col < 8; col++) {
+        if (spriteMatrix[row][col] === 1) {
+          targetCtx.fillRect(cx + col * basePixel, cy + row * basePixel, basePixel, basePixel);
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Optimization: Pre-render Background Layer ONCE
+  // ---------------------------------------------------------------
+  function preRenderBackground(){
+    bgCanvas.width = W;
+    bgCanvas.height = H;
+
+    // Court floor background
+    bgCtx.fillStyle = "#a84e16";
+    bgCtx.fillRect(0, 0, W, H);
+
+    let nearXOffset = NEAR_WIDTH * 0.75;
+    let farXOffset = FAR_WIDTH * 0.75;
+
+    let leftNearX = CENTER_X - nearXOffset;
+    let leftFarX = CENTER_X - farXOffset;
+    let rightNearX = CENTER_X + nearXOffset;
+    let rightFarX = CENTER_X + farXOffset;
+
+    // 1. LEFT SIDE PERSPECTIVE SEATING STRIP
+    bgCtx.fillStyle = "#fcaa03";
+    bgCtx.beginPath();
+    bgCtx.moveTo(0, 0);
+    bgCtx.lineTo(leftFarX, 0);
+    bgCtx.lineTo(leftNearX, H);
+    bgCtx.lineTo(0, H);
+    bgCtx.closePath();
+    bgCtx.fill();
+
+    // 2. RIGHT SIDE PERSPECTIVE SEATING STRIP
+    bgCtx.fillStyle = "#fcaa03";
+    bgCtx.beginPath();
+    bgCtx.moveTo(rightFarX, 0);
+    bgCtx.lineTo(W, 0);
+    bgCtx.lineTo(W, H);
+    bgCtx.lineTo(rightNearX, H);
+    bgCtx.closePath();
+    bgCtx.fill();
+
+    // 3. DRAW AUDIENCE CHARACTERS INTO PRE-RENDER CACHE
+    for (let y = 15; y < H - 15; y += 38) {
+      let progress = y / H; 
+      let currentLeftBarrierX = lerp(leftFarX, leftNearX, progress);
+      let currentRightBarrierX = lerp(rightFarX, rightNearX, progress);
+      let currentScale = lerp(0.45, 1.1, progress);
+
+      for (let x = 15; x < currentLeftBarrierX - 25; x += (40 * currentScale)) {
+         drawPixelSprite(bgCtx, x, y, currentScale);
+      }
+      for (let x = currentRightBarrierX + 15; x < W - 25; x += (40 * currentScale)) {
+         drawPixelSprite(bgCtx, x, y, currentScale);
+      }
+    }
+
+    // 4. Perspective Blue Line Barriers
+    bgCtx.strokeStyle = "#3a69cf";
+    bgCtx.lineWidth = 6;
+    
+    bgCtx.beginPath();
+    bgCtx.moveTo(leftFarX, 0);
+    bgCtx.lineTo(leftNearX, H);
+    bgCtx.stroke();
+
+    bgCtx.beginPath();
+    bgCtx.moveTo(rightFarX, 0);
+    bgCtx.lineTo(rightNearX, H);
+    bgCtx.stroke();
+  }
+
+  function tableCorners(){
+    return {
+      nearL: { x: CENTER_X - NEAR_WIDTH/2, y: NEAR_Y },
+      nearR: { x: CENTER_X + NEAR_WIDTH/2, y: NEAR_Y },
+      farL:  { x: CENTER_X - FAR_WIDTH/2,  y: FAR_Y },
+      farR:  { x: CENTER_X + FAR_WIDTH/2,  y: FAR_Y }
+    };
+  }
+
+  function drawTable(){
+    const c = tableCorners();
+
+    // Under-table shadow area
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.moveTo(CENTER_X - NEAR_WIDTH * 0.38, NEAR_Y);
+    ctx.lineTo(CENTER_X + NEAR_WIDTH * 0.38, NEAR_Y);
+    ctx.lineTo(CENTER_X + NEAR_WIDTH * 0.38, NEAR_Y + 70);
+    ctx.lineTo(CENTER_X - NEAR_WIDTH * 0.38, NEAR_Y + 70);
+    ctx.closePath();
+    ctx.fill();
+
+    // Legs
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(c.nearL.x + 10, c.nearL.y); ctx.lineTo(c.nearL.x + 10, c.nearL.y + 90); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(c.nearR.x - 10, c.nearR.y); ctx.lineTo(c.nearR.x - 10, c.nearR.y + 90); ctx.stroke();
+
+    // Surface
+    ctx.fillStyle = '#3a69cf'; 
+    ctx.beginPath();
+    ctx.moveTo(c.nearL.x, c.nearL.y); ctx.lineTo(c.nearR.x, c.nearR.y);
+    ctx.lineTo(c.farR.x, c.farR.y);   ctx.lineTo(c.farL.x, c.farL.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Outlines
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4; 
+    ctx.beginPath();
+    ctx.moveTo(c.nearL.x, c.nearL.y); ctx.lineTo(c.nearR.x, c.nearR.y);
+    ctx.lineTo(c.farR.x, c.farR.y);   ctx.lineTo(c.farL.x, c.farL.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // Center Line
+    ctx.beginPath(); ctx.moveTo(CENTER_X, NEAR_Y); ctx.lineTo(CENTER_X, FAR_Y);
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3; ctx.stroke();
+  }
+
+  function drawNet(){
+    const z = 0.5, y = tableYAtZ(z), width = tableWidthAtZ(z), scale = scaleAtZ(z);
+    const left = CENTER_X - width/2 - 6, right = CENTER_X + width/2 + 6;
+    const netHeight = 32 * scale;
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(left, y - netHeight, right - left, netHeight);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(left, y - netHeight, right - left, 3);
+    ctx.fillRect(left, y, 3, -netHeight);
+    ctx.fillRect(right - 3, y, 3, -netHeight);
+  }
+  
+  function drawEffects(){
+    effects.forEach(e => {
+      const t = e.t / e.duration;
+      const scale = scaleAtZ(e.z);
+      const r = Math.max(1, lerp(4, 25, t) * scale);
+      ctx.strokeStyle = e.color;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(xToScreen(e.x, e.z) - r, tableYAtZ(e.z) - r*0.3, r*2, r*0.6);
+    });
+
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.size, p.size);
+    });
+  }
+
+  function drawPaddle(entity, mainColor, darkColor){
+    const scale = scaleAtZ(entity.z);
+    const sx = xToScreen(entity.x, entity.z);
+    const sy = tableYAtZ(entity.z) - 10 * scale;
+    const pulse = entity.hitPulse;//1 on impact to 0
+    const r = Math.max(6, 22 * scale) * (1 + pulse * 0.35);
+
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(sx - 3*scale, sy, 6*scale, 28*scale);
+
+    ctx.fillStyle = darkColor;
+    ctx.beginPath();
+    ctx.arc(sx, sy + r * 0.16, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = mainColor;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2 + pulse * 3;
+    ctx.stroke();
+    ctx.globalAlpha = pulse * 0.8;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(sx, sy, r + (1 - pulse) * 25 * scale, 0, Math.PI * 2)
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  
+  }
+
+
+  function drawTrail(){
+    for(let i = 0; i < ball.trail.length; i++){
+      const t = ball.trail[i];
+      const f = (i + 1) / ball.trail.length;
+      // 0 = oldest, 1 = newest
+      const scale = scaleAtZ(t.z);
+      const r = Math.max(1, 8 * scale * f * 0.8);
+      const x = xToScreen(t.x, t.z);
+      const y = tableYAtZ(t.z) - (t.h * 160 * scale);
+
+      ctx.globalAlpha = 0.45 * f;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+
+  function drawBall() {
+    const bx = ballXToCanvas(ball.x);
+    const bzY = tableYAtZ(ball.z);
+    const scale = scaleAtZ(ball.z);
+    const ballRadius = Math.max(3, 8 * scale);
+    const actualBallY = bzY - (ball.h * 160 * scale);
+
+    //shadow that shrinks and fades as the ball climbs
+    const shadowR = ballRadius * clamp(1.15 - ball.h * 0.35, 0.4, 1.15);
+    ctx.globalAlpha = clamp(1 - ball.h * 0.5, 0.15, 1) * 0.5;
+    ctx.fill
+    ctx.beginPath();
+    ctx.ellipse(bx, bzY, shadowR, shadowR * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    //ball squash
+    const sq = ball.squash;
+    //1 right after bounce to 0
+    const rx = ballRadius * (1 + sq * 0.35);
+    const ry = Math.max(1, ballRadius * (1 - sq * 0.45));
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.ellipse(bx, actualBallY + (ballRadius - ry), rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  
+
+
+
+
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(bx - ballRadius, bzY - ballRadius*0.3, ballRadius*2, ballRadius*0.6);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(bx, actualBallY, ballRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+
+  function drawServerPrompt(){
+    if(serveState !== 'ready')
+    return;
+  ctx.save();
+  ctx.globalAlpha = 0.66 + Math.sin(performance.now() * 0.006) * 0.45;
+  ctx.fillStyle = "#ffffff";
+  ctx.font = 'bold 20px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  const label = pendingServe.vz > 0 ? 'YOUR SERVE - CLICK OR PRESS SPACE'
+  : 'COM SERVES - CLICK WHEN READY';
+  ctx.fillText(label, CENTER_X, H * 0.30);
+  ctx.restore();
+  }
+
+
+  function draw(){
+    ctx.save();
+    if(screenShakeTime > 0){
+      ctx.translate((Math.random() - 0.5) * screenShakeIntensity, (Math.random() - 0.5) * screenShakeIntensity);
+      screenShakeTime--;
+    }
+    ctx.clearRect(0, 0, W, H);
+    
+    // Stamp the optimized background down instantly
+    ctx.drawImage(bgCanvas, 0, 0);
+    
+    drawTable();
+    drawNet();
+    drawEffects();
+    drawTrail();
+
+    const renderLayers = [
+      { z: ai.z,    fn: () => drawPaddle(ai, '#63f576', '#128220') }, 
+      { z: ball.z,   fn: drawBall },
+      { z: player.z, fn: () => drawPaddle(player, '#f562cc', '#9e1b7a') } 
+    ];
+    renderLayers.sort((a, b) => b.z - a.z);
+    renderLayers.forEach(layer => layer.fn());
+    drawServerPrompt();
+    drawRally();
+    ctx.restore();
+  }
+
+  let lastTime = null;
+  function loop(ts){
+    if(lastTime == null) lastTime = ts;
+    let dt = (ts - lastTime) / 1000;
+    lastTime = ts;
+    try {
+      update(Math.min(dt, 0.04));
+      draw();
+    } catch(err) {
+      console.error(err);
+    }
+    requestAnimationFrame(loop);
+  }
+  
+  resize();
+  window.addEventListener('resize', resize);
+  resetBall();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
