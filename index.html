@@ -478,15 +478,22 @@ window.addEventListener('keydown', (e) => {
     rally = 0;
   }
 
-  function drawrally(){
+  function drawRally(){
     ctx.save();
-    ctx.font = 'bold 16px "Courier New", monospace';
+    ctx.font = 'bold 26px "Courier New", monospace';
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.fillText('RALLY ' + rally, 18, H - 44);
-    ctx.fillStyle = 'rgba(252, 151, 3, 0.9)';
-    ctx.fillText('BEST ' + bestRally, 18, H - 22);
-    ctx.restore(); 
+    const rallyText = 'RALLY ' + rally;
+    const bestText = 'BEST ' + bestRally;
+    const boxWidth = Math.max(ctx.measureText(rallyText).width, ctx.measureText(bestText).width) + 24;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.75)';
+    ctx.fillRect(10, H - 78, boxWidth, 60);
+
+    ctx.fillStyle = '#00ffcc';
+    ctx.fillText(rallyText, 18, H - 60);
+    ctx.fillStyle = '#ffdd00';
+    ctx.fillText(bestText, 18, H - 30);
+    ctx.restore();
   }
 
   function playerScores(){endRally(), scorePlayer++; playSound('score.mp3'); checkMatchOver(); }
